@@ -1,0 +1,386 @@
+
+import wikipedia
+import wolframalpha
+import requests
+import os
+import threading
+import speech_recognition as sr
+from pygame import mixer
+import webbrowser
+from googlesearch import search
+import pyttsx3
+from tkinter import Tk, Label
+from tkinter import *
+from tkinter import ttk
+import gif
+
+import time
+
+
+root = Tk()
+
+root.geometry('520x650')
+root.title('Prince Margaret Personal assistant')
+#root.iconbitmap("C:\Iconleak-Atrous-Microphone.ico")
+root.iconbitmap("Microphone_icon.ico")
+
+style = ttk.Style()
+style.theme_use('winnative')
+logo=gif.AnimatedGIF(root, 'earth.gif')  
+
+logo.pack()
+
+#logo2=gif.AnimatedGIF(root,'C:\buffer.gif')
+frame=Frame(root)
+sc=Scrollbar(frame)
+msgs=Listbox(frame,width=80,height=10,bg="lightblue")
+sc.pack(side=RIGHT,fill=Y)
+msgs.pack(side=LEFT,fill=BOTH,pady=10)
+frame.pack()
+
+
+label1 = ttk.Label(root, text='Query:')
+label1.pack(side=LEFT)
+#label1.grid(row=0, column=0)
+
+
+entry1 = ttk.Entry(root, width=50)
+entry1.pack(side=LEFT)
+
+#entry1.grid(row=0, column=1, columnspan=4)
+btn2 = StringVar()
+
+
+
+
+
+
+
+photo = PhotoImage(file='microphone.png').subsample(20, 20)
+
+
+
+
+
+
+def margaret_speak(output):
+
+    a='Margaret'+ " :   "+ output
+
+    msgs.focus()
+    #msgs.delete(0, END)
+    msgs.insert(0, a)
+
+
+    engine = pyttsx3.init()
+    voices = engine.getProperty('voices')
+
+    engine.setProperty('voice', voices[0].id)  # MARGREAT
+    engine.setProperty('rate', 190)
+    engine.setProperty('volume', 120.0)
+
+    engine.say(output)
+    engine.runAndWait()
+    engine.stop()
+
+
+
+def NewsFromBBC():
+    try:
+        main_url = "https://newsapi.org/v2/top-headlines?country=in&category=science&apiKey=af87328db1b042ed8452ee054068c446"
+        open_bbc_page = requests.get(main_url).json()  # variable is dictionary
+        article = open_bbc_page["articles"]
+        results = []
+
+        for ar in article:
+            results.append(ar["title"])
+
+        for i in range(len(results)):
+            # printing all trending news
+            margaret_speak('{}, '.format(i + 1) + results[i])
+    except:
+        margaret_speak("api key error so i can not fetch current news")
+
+def open_application(input):
+    try:
+        if "chrome" in input:
+            margaret_speak(" opening Google Chrome")
+            os.startfile('Google Chrome.lnk')
+
+        elif "arduino" in input:
+            margaret_speak(" opening arduino")
+            os.startfile("Arduino.lnk")
+
+        elif "notepad" in input:
+            margaret_speak(" opening notepad")
+            os.startfile("notepad.lnk")
+        elif "codeblocks" in input or "codeblock" in input:
+            margaret_speak("Opening codeblocks ")
+            os.startfile('C:\Program Files (x86)\CodeBlocks\codeblocks.exe')
+
+
+        elif "wordpad" in input:
+            margaret_speak("Opening  Word Pad")
+
+            os.startfile("C:\WordPad.lnk")
+        elif "word" in input:
+            margaret_speak("Opening Microsoft Word")
+            os.startfile('C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Word 2016.lnk')
+
+        elif "excel" in input:
+
+            margaret_speak("Opening Microsoft Excel")
+            os.startfile('C:\Program Files (x86)\Excel 2016.lnk')
+
+        elif "vlc" in input:
+            os.startfile("VLC media player.lnk")
+
+        else:
+            margaret_speak("Application not available")
+    except:
+        margaret_speak("Application not available")
+
+def close():
+    os.system("TASKKILL /F /IM chrome.exe")
+    os.system("TASKKILL /F /IM arduino.exe")
+    os.system("TASKKILL /F /IM notepad.exe")
+    os.system("TASKKILL /F /IM codeblocks.exe")
+    os.system("TASKKILL /F /IM chrome.exe")
+    os.system("TASKKILL /F /IM WordPad.lnk")
+
+
+def wol(question):
+    try:
+        margaret_speak(next(wolframalpha.Client("4QHXVE-U8T54TTH6V").query(question.upper()).results).text)
+
+    except:
+        margaret_speak(" I have error in wolframalpha module so I am unable to search on wolframalpha ")
+def wiki(question):
+    try:
+        margaret_speak(wikipedia.summary(question, 2))
+    except:
+        margaret_speak(" I have error in wikipedia module so I am unable to search on wikipedia")
+def chrome(question):       # chrome
+    try:
+        #logo2=gif.AnimatedGIF(root,'buffer.gif')
+        #logo2.pack()
+        
+        
+        url=next(search(question))
+        webbrowser.open(url)
+        margaret_speak("opening  " + question)
+        
+    except:
+        margaret_speak("I have HTTP request error in google module from google search  ")
+        
+
+
+def threader(question):
+    t1 = threading.Thread(target=wol, args=(question,))
+    t2 = threading.Thread(target=wiki, args=(question,))
+    #t3 = threading.Thread(target=chrome, args=(question,))
+    t1.start()
+    t2.start()
+
+    #t3.start()
+    t1.join()
+    t2.join()
+    #t3.join()
+
+
+
+def main():
+    try:
+        question = entry1.get().lower().rstrip()
+        msgs.focus()
+        msgs.delete(0, END)
+        msgs.insert(0, "You :  " + entry1.get())
+        entry1.focus()
+        entry1.delete(0, END)
+    except:
+        margaret_speak("error in taking input")
+
+
+    try:
+        if "who are you" in entry1.get() or "define yourself" in entry1.get():
+            margaret_speak('''Hello, I am Margreat of Prince Agrahari.
+                   I am here to make your life easier.
+                   You can command me to perform various tasks such as calculating sums or opening applications etcetra''')
+        elif "hello" in question or "hi" in question or "hey" in question:
+            margaret_speak("Yes sir, what can i help you")
+        elif "close" in question:
+            close()
+
+
+
+        elif "who made you" in question or "created you" in question:
+            margaret_speak("I have been created by Prince Sir")
+        elif "who is your boss" in question or "who is your commander" in question:
+            margaret_speak(" Prince Sir")
+
+
+
+
+        elif "where do you live" in question:
+            margaret_speak("i live in your heart")
+        elif "what is your name" in question:
+            margaret_speak("I am Margaret")
+        elif "who are you" in question:
+            margaret_speak("I am assistant of Prince Sir")
+
+        elif "how are you" in question:
+            margaret_speak("i am fine and you?")
+        elif "open" in question:
+            open_application(question)
+        elif "news" in question:
+            NewsFromBBC()
+        elif "song" in question or "music" in question or "songs" in question or "gana" in question or "ganna" in question or "play" in question:
+            chrome(question)
+
+        elif "video" in question or "videos" in question:
+            chrome(question)
+        elif "photo" in question or "pic" in question or "pics" in question or "diagram" in question or "figure" in question or "chitra" in question:
+            chrome(question)
+        elif "wikipedia" in question:
+            wiki(question)
+        elif "wolframalpha" in question:
+            wol(question)
+        else:
+            #threader(question)
+            try:
+              chrome(question)
+            except:
+                pass
+
+
+    except:
+        if btn2.get() == 'google' and entry1.get() != '':
+            webbrowser.open('http://google.com/search?q=' + entry1.get())
+
+        elif btn2.get() == 'duck' and entry1.get() != '':
+            webbrowser.open('http://duckduckgo.com/?q=' + entry1.get())
+
+        elif btn2.get() == 'amazon' and entry1.get() != '':
+            webbrowser.open('https://amazon.com/s/?url=search-alias%3Dstripbooks&field-keywords=' + entry1.get())
+
+        elif btn2.get() == 'youtube' and entry1.get() != '':
+            webbrowser.open('https://www.youtube.com/results?search_query=' + entry1.get())
+
+        else:
+            pass
+
+
+
+
+
+
+
+
+def callback():
+    if btn2.get() == 'google' and entry1.get() != '':
+        webbrowser.open('http://google.com/search?q=' + entry1.get())
+
+    elif btn2.get() == 'duck' and entry1.get() != '':
+        webbrowser.open('http://duckduckgo.com/?q=' + entry1.get())
+
+    elif btn2.get() == 'amazon' and entry1.get() != '':
+        webbrowser.open('https://amazon.com/s/?url=search-alias%3Dstripbooks&field-keywords=' + entry1.get())
+
+    elif btn2.get() == 'youtube' and entry1.get() != '':
+        webbrowser.open('https://www.youtube.com/results?search_query=' + entry1.get())
+
+    else:
+        pass
+
+
+
+
+
+
+
+def get(event):
+    if btn2.get() == 'google' and entry1.get() != '':
+        main()
+
+
+
+def microphone():
+    
+    mixer.init()
+    mixer.music.load('alart_sound.mp3')
+    mixer.music.play()
+
+    # enter the name of usb microphone that you found
+    # using lsusb
+    # the following name is only used as an example
+    #mic_name = "USB Device 0x46d:0x825: Audio (hw:1, 0)
+    # Sample rate is how often values are recorded
+    sample_rate = 48000
+    # Chunk is like a buffer. It stores 2048 samples (bytes of data)
+    # here.
+    
+    chunk_size = 2048   # it is advisable to use powers of 2 such as 1024 or 2048
+    try:
+        r = sr.Recognizer()
+        with sr.Microphone() as source:
+            #r.pause_threshold =.7
+            r.adjust_for_ambient_noise(source)
+            audio = r.listen(source)
+            text = r.recognize_google(audio)
+            try:
+               entry1.focus()
+               entry1.delete(0, END)
+               entry1.insert(0, text)
+               main()
+            except:
+                pass
+    
+                      
+    except sr.UnknownValueError:
+            margaret_speak('Google Speech Recognition could not understand audio')
+
+    except sr.RequestError as e:
+            margaret_speak('Please Check your internet connection')
+
+   
+
+
+entry1.bind('<Return>', get)
+
+
+Search= ttk.Button(root, text='Search', width=10, command=main)#.grid(row=0, column=6)
+Search.pack(fill=X,side=LEFT,padx=5)
+
+mic = Button(root, image=photo, command=microphone, bd=1, activebackground='#c1bfbf', overrelief='groove',relief='sunken')#.grid(row=0, column=5)
+mic.pack(side=LEFT,padx=5)
+Search= ttk.Button(root, text='close', width=10, command=close)#.grid(row=0, column=6)
+Search.pack(fill=Y,side=TOP)
+
+
+#mic = Button(root, image=photo, command=microphone, bd=0, activebackground='#c1bfbf', overrelief='groove',relief='sunken')#.grid(row=0, column=5)
+#mic.pack(side=LEFT)
+Google= ttk.Radiobutton(root, text='Google', value='google', variable=btn2)#.grid(row=1+1, column=1+1, sticky=W)
+Google.pack()
+
+Duck= ttk.Radiobutton(root, text='Duck', value='duck', variable=btn2)#.grid(row=1+1, column=2+1, sticky=W)
+Duck.pack()
+
+Amazon= ttk.Radiobutton(root, text='Amazon', value='amazon', variable=btn2)#.grid(row=1+1, column=3+1)
+Amazon.pack()
+
+Youtube= ttk.Radiobutton(root, text='Youtube', value='youtube', variable=btn2)#.grid(row=1+1, column=4+1, sticky=E)
+Youtube.pack()
+#mic = Button(root, image=photo, command=microphone, bd=0, activebackground='#c1bfbf', overrelief='groove',relief='sunken')#.grid(row=0, column=5)
+#right_butterfly = Button(root, image=photo1,  bd=-2, activebackground='#c1bfbf', overrelief='groove',relief='sunken').grid(row=0, column=7)
+#left_butterfly = Button(root, image=photo1,  bd=-2, activebackground='#c1bfbf', overrelief='groove',relief='sunken').grid(row=0, column=0)
+#spy_figure = Button(root, image=photo2,  bd=-2, activebackground='#c1bfbf', overrelief='groove',relief='sunken').grid(row=0, column=7)
+
+
+
+
+
+entry1.focus()
+root.wm_attributes('-topmost', 1)
+btn2.set("google")
+
+root.mainloop()
